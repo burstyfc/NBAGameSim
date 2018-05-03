@@ -1,0 +1,1562 @@
+int STEAL = 3;
+int BLOCK = 3;
+
+class Team {
+  String name;
+  int EW; // 1 = Eastern, 2 = Western
+  ArrayList<Player> players = new ArrayList<Player>();
+  int totalPts = 0;
+  int totalReb = 0;
+  int totalAst = 0;
+  int totalStl = 0;
+  int totalBlk = 0;
+  int overall;
+
+  int prevPossession = 0;
+  int recorder = 0;
+  boolean gameStart = false;
+
+  ArrayList<Integer> results;
+  ArrayList<Team> matches;
+  int rebound = 0;
+
+  Team(String name, int EW) {
+    this.name = name;
+    this.EW = EW;
+    this.overall = 0;
+  }
+  // Helper Functions
+
+
+  // Setters (Generator)
+
+  // Add the given list of players to this team
+  void setPlayers(ArrayList<Player> pl) {
+    for (int i = 0; i < pl.size(); i++) {
+      this.players.add(pl.get(i));
+    }
+  }
+  // Add the given player to this team
+  void addPlayers(Player p) {
+    this.players.add(p);
+  }
+
+  // Set the total Points based on players
+  void setTotalPts() {
+    if (this.players.size() > 0) {
+      for (int i = 0; i < this.players.size(); i++) {
+        this.totalPts = this. totalPts + players.get(i).getPts();
+      }
+    }
+
+  }
+  //get the total Points based
+  int getTotalPts() {
+    return this.totalPts;
+  }
+
+
+  // Set the total Rebounds based on players
+  void setTotalReb() {
+    if (this.players.size() > 0) {
+      for (int i = 0; i < this.players.size(); i++) {
+        this.totalReb = this. totalReb + players.get(i).getReb();
+      }
+    }
+
+  }
+
+  // Set the total Assists based on players
+  void setTotalAst() {
+    if (this.players.size() > 0) {
+      for (int i = 0; i < this.players.size(); i++) {
+        this.totalAst = this. totalAst + players.get(i).getAst();
+      }
+    }
+
+  }
+
+  // Set the total Steals based on players
+  void setTotalStl() {
+    if (this.players.size() > 0) {
+      for (int i = 0; i < this.players.size(); i++) {
+        this.totalStl = this. totalStl + players.get(i).getStl();
+      }
+    }
+
+  }
+  // Set the total Blocks based on players
+  void setTotalBlk() {
+    if (this.players.size() > 0) {
+      for (int i = 0; i < this.players.size(); i++) {
+        this.totalBlk = this.totalBlk + players.get(i).getBlk();
+      }
+    }
+
+  }
+  // Count and Set overall value of this team
+  void setOverall() {
+
+  }
+  // Record the match this team has played
+  void recordMatch(Team t) {
+     this.matches.add(t);
+     if (this.totalPts > t.getTotalPts()) {
+       this.results.add(1);
+     }
+     else {
+       this.results.add(0);
+     }
+  }
+  // generate the performance of each player in this team
+  /*void teamGenerator() {
+    for (int i = 0; i < this.players.size(); i ++) {
+      generator(players.get(i));
+      if (players.get(i).ast >= 8 && players.get(i).ast <= 13) {
+        for (int j = i + 1; j < players.size(); j++) {
+          players.get(j).boostStatus(1);
+        }
+        players.get(i).status--;
+      }
+      if (players.get(i).ast > 13) {
+        for (int j = i + 1; j < players.size(); j++) {
+          players.get(j).boostStatus(2);
+        }
+        players.get(i).status--;
+      }
+    }
+    setTotalPts();
+    setTotalReb();
+    setTotalAst();
+    setTotalStl();
+    setTotalBlk();
+
+  }*/
+
+    // count overall status
+  int countStatus() {
+    int sta = 0;
+    for (int i = 0; i < players.size(); i++) {
+      sta = sta + players.get(i).status;
+    }
+    return sta;
+  }
+
+  // Clean the performance of the last match
+  void clearT() {
+    for (int i = 0; i < this.players.size(); i++) {
+      this.players.get(i).clearP();
+    }
+    totalPts = 0;
+    totalReb = 0;
+    totalAst = 0;
+    totalStl = 0;
+    totalBlk = 0;
+    prevPossession = 0;
+    rebound = 0;
+    gameStart = false;
+  }
+
+  int findGT10Reb() {
+    int count = 0;
+    for (int i = 0; i < players.size(); i++) {
+      if (players.get(i).reb >= 10) { count ++;}
+
+    }
+    return count;
+  }
+  int findGT8Ast() {
+    int count = 0;
+    for (int i = 0; i < players.size(); i++) {
+      if (players.get(i).ast >= 8) { count ++;}
+
+    }
+    return count;
+  }
+  int RebBonus() {
+    for (int i = 0; i < players.size(); i++) {
+      if (players.get(i).position == 5 && players.get(i).reb > 19) {
+         return 3;
+      }
+
+    }
+    return 1 * this.findGT10Reb();
+
+  }
+  void initStatus() {
+    for (Player p: players) {
+      p.initStatus();
+    }
+  }
+
+  void reduceStatus(int n) {
+    for (Player p: players) {
+      p.reduceStatus(n);
+    }
+  }
+
+  Player findPlayer(int position) {
+    Player pl = new Player();
+    for (Player p: players) {
+      if (p.position == position) {
+        pl = p;
+      }
+    }
+    return pl;
+  }
+  /*********************************** Helper Function ********************************************/
+  // Set possession
+  void setPossession(int i) {
+    Player p = players.get(i);
+    p.possession = 1;
+    players.set(i, p);;
+
+  }
+  // Does this team has possession?
+  boolean possessOrNot() {
+    boolean result = false;
+    for (Player p: players) {
+       if (p.possession == 1) {
+         result = true;
+       }
+    }
+    return result;
+  }
+  // Who has the possession right now?
+  int possession() {
+    int i = 0;
+    for (Player p: players) {
+      if (p.possession == 1) {
+        i = p.position;
+      }
+    }
+    return i;
+  }
+  //this team loses possession
+  void lostPossession() {
+    for (Player p: players) {
+      p.possession = 0;
+    }
+    prevPossession = 0;
+  }
+
+  /*********************************** Team Case Generator ****************************************/
+
+
+  int pass() {
+    int i = possession();
+    prevPossession = i;
+    ArrayList<Integer> ilist = new ArrayList<Integer>();
+    ilist.add(1);
+    ilist.add(2);
+    ilist.add(3);
+    ilist.add(4);
+    ilist.add(5);
+    for (int j = 0; j < ilist.size(); j++) {
+      if (i == ilist.get(j)) {
+        ilist.remove(j);
+      }
+    }
+    int n = int(random(ilist.size()));
+
+    players.get(i-1).pass(players.get(ilist.get(n) - 1));
+    setPossession(ilist.get(n) - 1);
+
+    return 100;
+
+
+  }
+
+  int jumpshot() {
+    int i = possession() - 1;
+    recorder = i + 1;
+    float n = players.get(i).jumpshot();
+    int p = int(random(0, 10)) + 1;
+    if (p <= n) {
+      players.get(i).made2Shot();
+      totalPts += 2;
+      return 1;
+    }
+    else {
+      players.get(i).miss2Shot();
+      return -1;
+    }
+  }
+
+  int threeShot() {
+    int i = possession() - 1;
+    recorder = i + 1;
+    float n = players.get(i).threeptshot();
+    int p = int(random(0, 10)) + 1;
+    if (p <= n) {
+      players.get(i).made3shot();
+      totalPts += 3;
+      return 3;
+    }
+    else {
+      players.get(i).miss3Shot();
+      return -3;
+    }
+  }
+  int layDunk() {
+    int i = possession() - 1;
+    recorder = i + 1;
+    float n = players.get(i).layDunk();
+    int p = int(random(0, 10)) + 1;
+    if (p <= n) {
+
+      players.get(i).made2Shot();
+      totalPts += 2;
+      return 2;
+    }
+    else {
+      players.get(i).miss2Shot();
+      return -2;
+    }
+  }
+  int steal() {
+    float i = random(0, 10);
+    float n = 0;
+    int res = 4;
+    if (i <= 3.5) {
+      n = players.get(0).steal();
+      if (n > STEAL) {
+        players.get(0).madeStl();
+        return res;
+      }
+      else {
+        return -4;
+      }
+    }
+    if (i > 3.5 && i <= 5.5) {
+      n = players.get(1).steal();
+      if (n > STEAL) {
+        players.get(1).madeStl();
+        return res;
+      }
+      else {
+        return -4;
+      }
+    }
+    if (i > 5.5 && i <=7.5) {
+      n = players.get(2).steal();
+      if (n > STEAL) {
+        players.get(2).madeStl();
+        return res;
+      }
+      else {
+        return -4;
+      }
+    }
+    if (i > 7.5 && i <= 9) {
+      n = players.get(3).steal();
+      if (n > STEAL) {
+        players.get(3).madeStl();
+        return res;
+      }
+      else {
+        return -4;
+      }
+    }
+    else  {
+      n = players.get(4).steal();
+      if (n > STEAL) {
+        players.get(4).madeStl();
+        return res;
+      }
+      else {
+        return -4;
+      }
+    }
+
+  }
+
+  int block() {
+    float i = random(0, 10);
+    float n = 0;
+    int res = 5;
+    if (i <= 3.5) {
+      n = players.get(4).block();
+      if (n > BLOCK) {
+        players.get(4).madeBlk();
+        return res;
+      }
+      else {
+        return -5;
+      }
+    }
+    if (i > 3.5 && i <= 5.5) {
+      n = players.get(3).block();
+      if (n > BLOCK) {
+        players.get(3).madeBlk();
+        return res;
+      }
+      else {
+        return -5;
+      }
+    }
+    if (i > 5.5 && i <=7.5) {
+      n = players.get(2).block();
+      if (n > BLOCK) {
+        players.get(2).madeBlk();
+        return res;
+      }
+      else {
+        return -5;
+      }
+    }
+    if (i > 7.5 && i <= 9) {
+      n = players.get(1).block();
+      if (n > BLOCK) {
+        players.get(1).madeBlk();
+        return res;
+      }
+      else {
+        return -5;
+      }
+    }
+    else {
+      n = players.get(0).block();
+      if (n > BLOCK) {
+        players.get(1).madeBlk();
+        return res;
+      }
+      else {
+        return -5;
+      }
+
+    }
+
+  }
+
+  float rebound() {
+    float i = random(0, 10);
+    float res = players.get(0).rebound();
+    int max = 0;
+    for (int j = 1; j < players.size(); j++) {
+      float temp = players.get(j).rebound();
+      if (res <= temp) {
+        res = temp;
+        max = j;
+      }
+    }
+   /* if (i <= 5) {
+      n = players.get(4).rebound();
+    }
+    if (i > 5 && i <= 7.5) {
+      n = players.get(3).rebound();
+    }
+    if (i > 7.5 && i <=8.5) {
+      n = players.get(2).rebound();
+    }
+    if (i > 8.5 && i <= 9) {
+      n = players.get(1).rebound();
+    }
+    else {
+      n = players.get(0).rebound();
+    }*/
+    rebound = max + 1;
+    return res;
+  }
+
+  int generator() {
+    int i = int(random(0, 10)) + 1;
+    int result = 0;
+    if (possessOrNot()) {
+      if (i <= 5) {
+        prevPossession = possession();
+        result = pass();
+
+      }
+      if (i > 5) {
+        int n = possession();
+        int p = int(random(0, 10)) + 1;
+        switch (n) {
+          case 1:
+            if (p <= 5) {
+              result = jumpshot();
+            }
+            if (p > 5 && p <= 8) {
+              result = layDunk();
+            }
+            if (p > 8) {
+              result = threeShot();
+            }
+            break;
+          case 2:
+            if (p <= 4) {
+              result = jumpshot();
+            }
+            if (p > 4 & p <= 7) {
+              result = layDunk();
+            }
+            if (p > 7) {
+              result = threeShot();
+            }
+            break;
+          case 3:
+            if (p <= 4) {
+              result = jumpshot();
+            }
+            if (p > 4 & p <= 8) {
+              result = layDunk();
+            }
+            if (p > 8) {
+              result = threeShot();
+            }
+            break;
+          case 4:
+            if (p <= 3) {
+              result = jumpshot();
+            }
+            if (p > 3 & p <= 8) {
+              result = layDunk();
+            }
+            if (p > 8) {
+              result = threeShot();
+            }
+            break;
+          case 5:
+            if (p <= 2) {
+              result = jumpshot();
+            }
+            if (p > 2 & p <= 8) {
+              result = layDunk();
+            }
+            if (p > 8) {
+              result = threeShot();
+            }
+            break;
+        }
+      }
+    }
+    if (gameStart) {
+      if (!possessOrNot()) {
+        if (i <= 1) {
+          result = steal();
+        }
+        if (i > 1 && i <= 2) {
+          result = block();
+        }
+      }
+    }
+    else {
+      result = 222;
+    }
+    return result;
+  }
+
+
+
+
+}
+
+class Player {
+  String name;
+  int position;  // 1 = Point Guard, 2 = shooting guard, 3 = small forward, 4 = power forward, 5 = center
+  int threeptShoot;
+  int twoptShoot;
+  int threeptHit;
+  int twoptHit;
+  int off;  // 3 = Strong offensive skill, 2 = medium offensive skill, 1 = Not good at offense
+  int def;  // 3 = Strong defensive skill, 2 = medium defensive skill, 1 = Not good at defense.
+  int pts;
+  int reb;
+  int ast;
+  int stl;
+  int blk;
+
+
+  int status;
+  boolean can3;
+  int possession;
+  int offcase = 0; // 1 = steal, 2 = block, 3 = rebound, 4 = hold;
+  int defcase = 0; // 1 = jump shot, 2 = layup, 3 = 3pt shot.
+
+
+  Player(String name, int position, int off, int def, boolean can3) {
+    this.name = name;
+    this.position = position;
+    this.off = off;
+    this.def = def;
+    this.pts = 0;
+    this.reb = 0;
+    this.ast = 0;
+    this.stl = 0;
+    this.blk = 0;
+    this.threeptShoot = 0;
+    this.twoptShoot = 0;
+    this.threeptHit = 0;
+    this.twoptHit = 0;
+    this.can3 = can3;
+    this.status = 0;
+    this.possession = 0;
+  }
+  Player() {}
+  // Getters and Setters
+
+  // Get position
+  int getPos() {
+    return this.position;
+  }
+  //Get Pts
+  int getPts() {
+    return this.pts;
+  }
+
+  // Set Pts
+  void setPts(int n) {
+    this.pts = n;
+  }
+
+  //Get Reb
+  int getReb() {
+    return this.reb;
+  }
+
+  // Set Pts
+  void setReb(int n) {
+    this.reb = n;
+  }
+  //Get Ast
+  int getAst() {
+    return this.ast;
+  }
+
+  // Set Ast
+  void setAst(int n) {
+    this.ast = n;
+  }
+  //Get Stl
+  int getStl() {
+    return this.stl;
+  }
+
+  // Set Stl
+  void setStl(int n) {
+    this.stl = n;
+  }
+
+  //Get Blk
+  int getBlk() {
+    return this.blk;
+  }
+
+  // Set Blk
+  void setBlk(int n) {
+    this.blk = n;
+  }
+
+  //set Num of 3pts shoot in the match;
+  void set3ptShoot(int n) {
+    this.threeptShoot = n;
+  }
+  //set Num of 2pts shoot in the match;
+  void set2ptShoot(int n) {
+    this.twoptShoot = n;
+  }
+
+  //set Num of 3pt shoot player hit in the match
+  void set3ptHit(int n) {
+    this.threeptHit = n;
+  }
+  //set Num of 2pt shoot player hit in the match
+  void set2ptHit(int n) {
+    this.twoptHit = n;
+  }
+
+
+  // count the pts
+  int countPts() {
+    return this.twoptHit * 2 + this.threeptHit * 3;
+  }
+
+
+  // Generator
+
+  void boostStatus(int n) {
+    status = status + n;
+    if (status > 10) { status = 10;}
+  }
+
+  void reduceStatus(int n) {
+
+      status = status - n;
+      if (status < 0) { status = 0;}
+  }
+
+
+  // clear data
+  void clearP() {
+    this.pts = 0;
+    this.reb = 0;
+    this.ast = 0;
+    this.stl = 0;
+    this.blk = 0;
+    this.threeptShoot = 0;
+    this.twoptShoot = 0;
+    this.threeptHit = 0;
+    this.twoptHit = 0;
+    //this.status = 0;
+    this.possession = 0;
+  }
+
+  void initStatus() {
+    this.status = int(random(10)) + 1;
+  }
+
+  /********************* Case Generator **************************/
+
+  void pass(Player p) {
+    this.possession = 0;
+  }
+
+  float jumpshot() {
+    float result = 0;
+    switch (position) {
+      case 1:
+        result = this.off * random(0.6, 0.8);
+        break;
+      case 2:
+        result = this.off * random(0.6, 0.9);
+        break;
+      case 3:
+        result = this.off * random(0.6, 0.8);
+        break;
+      case 4:
+        result = this.off * random(0.5, 0.8);
+        break;
+      case 5:
+        result = this.off * random(0.5, 0.8);
+        break;
+    }
+    this.possession = 0;
+    return result;
+  }
+
+  float threeptshot() {
+    float result = 0;
+    if (this.can3) {
+      switch (position) {
+        case 1:
+          result = this.off * random(0.5, 0.7);
+          break;
+        case 2:
+          result = this.off * random(0.55, 0.75);
+          break;
+        case 3:
+          result = this.off * random(0.45, 0.7);
+          break;
+        case 4:
+          result = this.off * random(0.45, 0.65);
+          break;
+        case 5:
+          result = this.off * random(0.45, 0.65);
+          break;
+      }
+    }
+    this.possession = 0;
+    return result;
+  }
+
+  float layDunk() {
+    float result = 0;
+    switch (position) {
+      case 1:
+        result = this.off * random(0.65, 0.9);
+        break;
+      case 2:
+        result = this.off * random(0.7, 0.9);
+        break;
+      case 3:
+        result = this.off * random(0.75, 0.9);
+        break;
+      case 4:
+        result = this.off * random(0.75, 0.95);
+        break;
+      case 5:
+        result = this.off * random(0.8, 1);
+        break;
+    }
+    this.possession = 0;
+    return result;
+  }
+
+  float rebound() {
+    float result = 0;
+    switch (position) {
+      case 1:
+        result = this.def * random(0.45, 0.75) + this.position * 0.35;
+        break;
+      case 2:
+        result = this.def * random(0.45, 0.8) + this.position * 0.3;
+        break;
+      case 3:
+        result = this.def * random(0.55, 0.8) + this.position * 0.3;
+        break;
+      case 4:
+        result = this.def * random(0.55, 0.8) + this.position * 0.25;
+        break;
+      case 5:
+        result = this.def * random(0.6, 0.8) + this.position * 0.15;
+        break;
+    }
+
+    return result;
+  }
+
+  float steal() {
+    float result=0;
+    switch (position) {
+      case 1:
+        result = this.def * random(0.45, 0.8);
+        break;
+      case 2:
+        result = this.def * random(0.35, 0.6);
+        break;
+      case 3:
+        result = this.def * random(0.3, 0.55);
+        break;
+      case 4:
+        result = this.def * random(0.3, 0.5);
+        break;
+      case 5:
+        result = this.def * random(0.2, 0.5);
+        break;
+    }
+    return result;
+  }
+
+  float block() {
+    float result=0;
+    switch (position) {
+      case 1:
+        result = this.def * random(0.2, 0.5);
+        break;
+      case 2:
+        result = this.def * random(0.3, 0.55);
+        break;
+      case 3:
+        result = this.def * random(0.35, 0.6);
+        break;
+      case 4:
+        result = this.def * random(0.45, 0.75);
+        break;
+      case 5:
+        result = this.def * random(0.55, 0.85);
+        break;
+    }
+    return result;
+  }
+
+  void made2Shot() {
+    pts = pts + 2;
+    twoptShoot ++;
+    twoptHit ++;
+  }
+  void made3shot() {
+    pts = pts + 3;
+    threeptShoot ++;
+    threeptHit ++;
+  }
+  void miss2Shot() {
+    twoptShoot ++;
+  }
+  void miss3Shot() {
+    threeptShoot ++;
+  }
+  void madeReb() {
+    this.possession = 1;
+    reb ++;
+  }
+  void madeAst() {
+    ast ++;
+  }
+  void madeStl() {
+    this.possession = 1;
+    stl ++;
+  }
+  void madeBlk() {
+    this.possession = 1;
+    blk ++;
+  }
+
+
+
+
+
+}
+// count the field goal percentage
+float getFGPct(Player p) {
+  float hit = p.threeptHit + p.twoptHit;
+  float shoot = p.threeptShoot + p.twoptShoot;
+  return hit / shoot;
+}
+String printPlayer(Player p) {
+  String result = "Player Name: " + p.name + " ";
+  result = result + "Status: " + p.status + "   ";
+  result = result +  p.pts + " pts / " + " ";
+  result = result + p.reb + " Rebounds / " + " ";
+  result = result + p.ast + " Assists / " + " ";
+  result = result + p.stl + " Steals / " + " ";
+  result = result + p.blk + " Blocks / " + " ";
+  result = result + "FG :" + p.twoptHit + "/" + p.twoptShoot + " " + p.threeptHit + "/" + p.threeptShoot + " " + getFGPct(p) * 100 + "%" + "\n";
+
+  return result;
+}
+
+void printPlayerInfo(Player p) {
+  // generator(p);
+   text(printPlayer(p) + "\n" + "\n", 10, 100);
+   p.clearP();
+}
+
+
+
+class Match {
+  Team team1;
+  Team team2;
+  int t1score;
+  int t2score;
+  int result; //1 = team1 wins, 2 = team2 wins;
+
+  int possession;
+  int quarter; // 1, 2, 3, 4 represent each quarter of game
+  int qtime = 720; // 720 secs per quarter
+
+  ArrayList<String> slist; //Statement List
+
+  //Debug
+  int n1 = 0;
+  int n2 = 0;
+
+
+  Match(Team team1, Team team2) {
+      this.team1 = team1;
+      this.team2 = team2;
+      this.t1score = 0;
+      this.t2score = 0;
+      this.result = 0;
+      this.possession = 0;
+      this.quarter = 0;
+      this.slist = new ArrayList<String>();
+  }
+
+  void jumpball() {
+    team1.gameStart = true;
+    team2.gameStart = true;
+    int i = int(random(1, 11));
+    if (i <= 5) {
+      this.possession = 1;
+      team1.setPossession(0);
+    }
+    if (i > 5) {
+      this.possession = 2;
+      team2.setPossession(0);
+    }
+    quarter = 1;
+    qtime = qtime - 1;
+  }
+
+  String printJB() {
+    String res = "";
+    res = res + "JUMP BALL " + team1.findPlayer(5).name + " VS " + team2.findPlayer(5).name;
+    switch (possession) {
+      case 1:
+        res = res + "(" + team1.findPlayer(1).name + " gains possession)";
+        break;
+      case 2:
+        res = res + "(" + team2.findPlayer(1).name + " gains possession)";
+        break;
+    }
+    return res;
+
+  }
+  void reboundBattle(float t1, float t2) {
+    if (t1 > t2) {
+      team1.findPlayer(team1.rebound).madeReb();
+      team2.prevPossession = 0;
+      this.possession = 1;
+    }
+    if (t1 < t2) {
+      team2.findPlayer(team2.rebound).madeReb();
+      team1.prevPossession = 0;
+      this.possession = 2;
+    }
+    if (t1 == t2) {
+      int i = int(random(0, 2)) + 1;
+      if (i == 1) {
+        team1.findPlayer(team1.rebound).madeReb();
+        team2.prevPossession = 0;
+        this.possession = 1;
+      }
+      if (i == 2) {
+        team2.findPlayer(team2.rebound).madeReb();
+        team1.prevPossession = 0;
+        this.possession = 2;
+      }
+    }
+  }
+  int generate() {
+    int res = 0;
+
+    n1 = team1.generator();
+    n2 = team2.generator();
+    if(n1 == 4) {
+      int t = int(random(1, 5));
+      qtime -= t;
+      n2 = 0;
+      team2.lostPossession();
+      res = 4;
+      this.possession = 1;
+    }
+    if(n1 == 5) {
+      int t = int(random(1, 5));
+      qtime -= t;
+      n2 = 0;
+      team2.lostPossession();
+      res = 5;
+      this.possession = 1;
+    }
+    if(n2 == 4) {
+      int t = int(random(1, 5));
+      qtime -= t;
+      n1 = 0;
+      team1.lostPossession();
+      res = -4;
+      this.possession = 2;
+    }
+    if(n2 == 5) {
+      int t = int(random(1, 5));
+      qtime -= t;
+      n1 = 0;
+      team1.lostPossession();
+      res = -5;
+      this.possession = 2;
+    }
+
+    if (n1 == 1 || n1 == 2 || n1 == 3) {
+      int t = int(random(2, 10));
+      qtime -= t;
+      team2.findPlayer(1).possession = 1;
+      int temp = team1.prevPossession;
+      team1.findPlayer(temp).ast ++;
+      team1.prevPossession = 0;
+
+
+        //team1.prevPossession = 0;
+
+      //team1.lostPossession();
+      res = n1;
+      this.possession = 2;
+    }
+    if (n2 == 1 || n2 == 2 || n2 == 3) {
+      int t = int(random(2, 10));
+      qtime -= t;
+      team1.findPlayer(1).possession = 1;
+      int temp = team2.prevPossession;
+      team2.findPlayer(temp).ast ++;
+      //team2.prevPossession = 0;
+
+        //team2.prevPossession = 0;
+
+      //team2.lostPossession();
+      res = n2 * 10;
+      this.possession = 1;
+    }
+    if (n1 == -1 || n1 == -2 || n1 == -3) {
+      int t = int(random(2, 10));
+      qtime -= t;
+      float t1 = team1.rebound() * 0.8; //Offensive Rebound
+      float t2 = team2.rebound(); // Defensive Rebound
+      reboundBattle(t1, t2);
+      res = n1;
+    }
+    if (n2 == -1 || n2 == -2 || n2 == -3) {
+      int t = int(random(2, 10));
+      qtime -= t;
+      float t1 = team1.rebound(); //Defensive Rebound
+      float t2 = team2.rebound() * 0.8; // Offensive Rebound
+      reboundBattle(t1, t2);
+      res = n2 * 10;
+    }
+    if (n1 == 100) {
+      int t = int(random(2, 6));
+      qtime -= t;
+      res = n1;
+    }
+    if (n2 == 100) {
+      int t = int(random(2, 6));
+      qtime -= t;
+      res = n2 * -1;
+    }
+    if (n1 == 222 || n2 == 222) {
+      res = 111;
+    }
+    return res;
+
+  }
+
+  String printPossession() {
+    String res = "";
+    if (possession == 1) {
+      res = " (" + team1.name + " Possesses ball)\n";
+    }
+    if (possession == 2) {
+      res = " (" + team2.name + " Possesses ball)\n";
+    }
+ /*   else {
+      res = " Possession: " + possession + " \n";
+    }*/
+    return res;
+  }
+
+  String printTime() {
+    String res = "";
+    res = res + "Time Left: ";
+    res = res + qtime / 60 + ":";
+    if (qtime % 60 < 10) {
+      res = res + "0" + qtime % 60 + "\n\n";
+    }
+    else {
+      res = res + qtime % 60 + "\n\n";
+    }
+    return res;
+  }
+
+  String printState(int i) {
+    String state = "";
+
+    // Shot Made!!!
+    if (i == 1) {
+      state = team1.findPlayer(team1.recorder).name + " Jump Shot: Made ("
+      + team1.findPlayer(team1.recorder).pts + " pts) Assist: " + team1.findPlayer(team1.prevPossession).name
+      + "(" + team1.findPlayer(team1.prevPossession).ast + " AST)";
+      team1.prevPossession = 0;
+    }
+    if (i == 2) {
+      state = team1.findPlayer(team1.recorder).name + " Layup/Dunk: Made ("
+      + team1.findPlayer(team1.recorder).pts + " pts) Assist: " + team1.findPlayer(team1.prevPossession).name
+      + "(" + team1.findPlayer(team1.prevPossession).ast + " AST)";
+      team1.prevPossession = 0;
+    }
+    if (i == 3) {
+      state = team1.findPlayer(team1.recorder).name + " 3pt Shot: Made ("
+      + team1.findPlayer(team1.recorder).pts + " pts) Assist: " + team1.findPlayer(team1.prevPossession).name
+      + "(" + team1.findPlayer(team1.prevPossession).ast + " AST)";
+      team1.prevPossession = 0;
+    }
+    if (i == 10) {
+      state = team2.findPlayer(team2.recorder).name + " Jump Shot: Made ("
+      + team2.findPlayer(team2.recorder).pts + " pts) Assist: " + team2.findPlayer(team2.prevPossession).name
+      + "(" + team2.findPlayer(team2.prevPossession).ast + " AST)";
+      team2.prevPossession = 0;
+    }
+    if (i == 20) {
+      state = team2.findPlayer(team2.recorder).name + " Layup/Dunk: Made ("
+      + team2.findPlayer(team2.recorder).pts + " pts) Assist: " + team2.findPlayer(team2.prevPossession).name
+      + "(" + team2.findPlayer(team2.prevPossession).ast + " AST)";
+      team2.prevPossession = 0;
+    }
+    if (i == 30) {
+      state = team2.findPlayer(team2.recorder).name + " 3pt Shot: Made ("
+      + team2.findPlayer(team2.recorder).pts + " pts) Assist: " + team2.findPlayer(team2.prevPossession).name
+      + "(" + team2.findPlayer(team2.prevPossession).ast + " AST)";
+      team2.prevPossession = 0;
+    }
+
+
+    // Shot Miss!!!
+     if (i == -1) {
+       if (team1.possessOrNot()) {
+         state = team1.findPlayer(team1.recorder).name + " Jump Shot: Miss \n";
+         state = state + team1.findPlayer(team1.possession()).name + " Rebound(" + team1.findPlayer(team1.possession()).reb
+         + " rebounds) ";
+
+       }
+       if (team2.possessOrNot()) {
+         state = team1.findPlayer(team1.recorder).name + " Jump Shot: Miss \n"
+         + team2.findPlayer(team2.possession()).name + " Rebound" + " (" + team2.findPlayer(team2.possession()).reb
+         + " rebounds)";
+       }
+    }
+    if (i == -2) {
+       if (team1.possessOrNot()) {
+         state = team1.findPlayer(team1.recorder).name + " Layup/Dunk: Miss \n"
+         + team1.findPlayer(team1.possession()).name + " Rebound" + " (" + team1.findPlayer(team1.possession()).reb
+         + " rebounds)";
+       }
+       if (team2.possessOrNot()) {
+         state = team1.findPlayer(team1.recorder).name + " Layup/Dunk: Miss \n"
+         + team2.findPlayer(team2.possession()).name + " Rebound" + " (" + team2.findPlayer(team2.possession()).reb
+         + " rebounds)";
+       }
+    }
+    if (i == -3) {
+       if (team1.possessOrNot()) {
+         state = team1.findPlayer(team1.recorder).name + " 3pt Shot: Miss \n"
+         + team1.findPlayer(team1.possession()).name + " Rebound" + " (" + team1.findPlayer(team1.possession()).reb
+         + " rebounds)";
+       }
+       if (team2.possessOrNot()) {
+         state = team1.findPlayer(team1.recorder).name + " 3pt Shot: Miss \n"
+         + team2.findPlayer(team2.possession()).name + " Rebound" + " (" + team2.findPlayer(team2.possession()).reb
+         + " rebounds)";
+       }
+    }
+    if (i == -10) {
+       if (team1.possessOrNot()) {
+         state = team2.findPlayer(team1.recorder).name + " Jump Shot: Miss \n"
+         + team1.findPlayer(team1.possession()).name + " Rebound" + " (" + team1.findPlayer(team1.possession()).reb
+         + " rebounds)";
+       }
+       if (team2.possessOrNot()) {
+         state = team2.findPlayer(team1.recorder).name + " Jump Shot: Miss \n"
+         + team2.findPlayer(team2.possession()).name + " Rebound" + " (" + team2.findPlayer(team2.possession()).reb
+         + " rebounds)";
+       }
+    }
+    if (i == -20) {
+       if (team1.possessOrNot()) {
+         state = team2.findPlayer(team1.recorder).name + " Layup/Dunk: Miss \n"
+         + team1.findPlayer(team1.possession()).name + " Rebound" + " (" + team1.findPlayer(team1.possession()).reb
+         + " rebounds)";
+       }
+       if (team2.possessOrNot()) {
+         state = team2.findPlayer(team1.recorder).name + " Layup/Dunk: Miss \n"
+         + team2.findPlayer(team2.possession()).name + " Rebound" + " (" + team2.findPlayer(team2.possession()).reb
+         + " rebounds)";
+       }
+    }
+    if (i == -30) {
+       if (team1.possessOrNot()) {
+         state = team2.findPlayer(team1.recorder).name + " 3pt Shot: Miss \n"
+         + team1.findPlayer(team1.possession()).name + " Rebound" + " (" +  team1.findPlayer(team1.possession()).reb
+         + " rebounds)";
+       }
+       if (team2.possessOrNot()) {
+         state = team2.findPlayer(team1.recorder).name + " 3pt Shot: Miss \n"
+         + team2.findPlayer(team2.possession()).name + " Rebound" + " (" + team2.findPlayer(team2.possession()).reb
+         + " rebounds)";
+       }
+    }
+    // Steal
+    if (i == 4) {
+      state = "Ball Stolen by " + team1.findPlayer(team1.possession()).name + "(" + team1.findPlayer(team1.possession()).stl + " steals)";
+    }
+    if (i == -4) {
+      state = "Ball Stolen by " + team2.findPlayer(team2.possession()).name + "(" + team2.findPlayer(team2.possession()).stl + " steals)";
+    }
+    // Block
+    if (i == 5) {
+      state = "Shot Blocked by " + team1.findPlayer(team1.possession()).name + "(" + team1.findPlayer(team1.possession()).blk + " blocks)";
+    }
+    if (i == -5) {
+      state = "Shot Blocked by " + team2.findPlayer(team2.possession()).name + "(" + team2.findPlayer(team2.possession()).blk + " blocks)";
+    }
+    if (i == 100) {
+      state = team1.findPlayer(team1.prevPossession).name + " Passes to " + team1.findPlayer(team1.possession()).name;
+    }
+    if (i == -100) {
+      state = team2.findPlayer(team2.prevPossession).name + " Passes to " + team2.findPlayer(team2.possession()).name;
+    }
+    if (i == 111) {
+      /*if (team1.possessOrNot()) {
+        state = team1.findPlayer(team1.possession()).name + " moving the ball. " +  qtime + " Seconds Left!";
+      }
+      if (team2.possessOrNot()) {
+        state = team2.findPlayer(team2.possession()).name + " moving the ball. " +  qtime + " Seconds Left!";
+      }*/
+      state = "Game's not started yet! ";
+    }
+
+    return state + printPossession() + printTime();
+  }
+  void init() {
+    jumpball();
+    String res = "";
+    res = res + printJB() + "\n\n";
+    slist.add(res);
+  }/*
+  void sta() {
+    initSta();
+    if (abs(team1.countStatus() - team2.countStatus()) >= 3) {
+      sta();
+    }
+
+  }
+  */
+
+  // Start the game.
+  void begin() {
+    jumpball();
+    String res = "";
+    res = res + printJB() + "\n";
+    slist.add(res);
+    //sta();
+    //team1.teamGenerator();
+    //team2.teamGenerator();
+
+ /*   int rebbonus1 = team1.RebBonus();
+    int rebbonus2 = team2.RebBonus();
+
+    if (rebbonus1 == rebbonus2) {
+
+    }
+    if (rebbonus1 - rebbonus2 > 0 && (team1.countStatus() - team2.countStatus() <=  -2)) {
+      team2.clearT();
+      team2.reduceStatus((rebbonus1 - rebbonus2) * 2);
+      team2.teamGenerator();
+    }
+    if (rebbonus1 - rebbonus2 < 0 && (team2.countStatus() - team1.countStatus() <=  -2)) {
+      team1.clearT();
+      team1.reduceStatus((rebbonus2 - rebbonus1) * 2);
+      team1.teamGenerator();
+    }
+
+
+    if (team1.totalPts == team2.totalPts) {
+      team1.clearT();
+      team1.teamGenerator();
+      team2.clearT();
+      team2.teamGenerator();
+    }
+    */
+  }
+
+  void matchResult() {
+    //team1.setTotalPts();
+    //team2.setTotalPts();
+    this.t1score = team1.totalPts;
+    this.t2score = team2.totalPts;
+    if (team1.totalPts > team2.totalPts) {
+      this.result = 1;
+    }
+    else {
+      this.result = 2;
+    }
+  }
+
+  void end() {
+    if (qtime < 0) {
+
+    }
+  }
+  void statement() {
+    if (qtime <= 0) {
+      qtime = 0;
+      slist.add("Match Result: " + printGame() + "\nTime Left: 0:00. \n");
+    }
+    if (qtime > 0) {
+      slist.add(printState(generate()));
+    }
+
+  }
+  String printResult() {
+    jumpball();
+    String res = "";
+    res = res + printJB() + "\n";
+   /* res = res + team1.findPlayer(team1.possession()).name + " has possession!" + "\n";
+    res = res + team2.findPlayer(team2.possession()).name + " has possession!" + "\n";
+    int i = generate();
+    res = res + i +"\n" + printState(i) + "\n";
+    res = res + "team1 result: " + n1 + "\n" + "team2 result: " + n2 + "\n";
+    res = res + team1.findPlayer(team1.possession()).name + " has possession!" + "\n";
+    res = res + team2.findPlayer(team2.possession()).name + " has possession!" + "\n";
+    res = res + "passed by " + team1.findPlayer(team1.prevPossession).name + "\n";
+    //res = res + team1.RebBonus() + "/" + team2.RebBonus() + "\n";
+    //res = res + "Status Comp: " + team1.countStatus() + ":" + team2.countStatus() + "\n";*/
+
+
+
+    /*
+
+    */
+    return res;//+ "\n" + res2;
+  }
+
+  String printDetail() {
+    String res = "";
+    res = res + team1.name + ": " + team1.totalPts + "\n";
+    res = res + team2.name + ": " + team2.totalPts + "\n";
+
+    String res2 = "";
+    for (int i = 0; i < 5; i ++) {
+      res2 = res2 + printPlayer(team1.players.get(i)) + "\n";
+    }
+    res2 = res2 + "\n";
+    for (int i = 0; i < 5; i ++) {
+      res2 = res2 + printPlayer(team2.players.get(i)) + "\n";
+    }
+    return res + res2 + printGame();
+  }
+
+  String printGame() {
+    matchResult();
+    String res = "";
+    if (result == 1) {
+      res = res + team1.name + " Wins Over " + team2.name +"!----------------" + team1.name + " " + t1score + " : " + t2score + " " + team2.name;
+    }
+    else {
+      res = res + team2.name + " Wins Over " + team1.name +"!----------------" + team1.name + " " + t1score + " : " + t2score + " " + team2.name;
+    }
+    if (qtime <= 0) {
+      return res;
+    }
+    else {
+      return "";
+    }
+  }
+
+}
+
+
+
+int value = 0;
+String initial = "Hint: Press 's' to start the game. \n      Press 'r' to track the game. \n      Have Fun!\n";
+PFont f;
+
+
+//******************************* Build your team below. 4 Examples given.******************************************
+//******************************* WARNING: 5 Players each team. *********************************************************
+
+  //Houston Rocket
+  ArrayList<Player> rocket = new ArrayList<Player>();
+  Team houston = new Team("Houston Rocket", 2);
+  Player p2 = new Player("James Harden", 2, 9, 6, true);
+  Player p5 = new Player("Dwight Howard", 5, 8, 10, false);
+  Player p1 = new Player("Patrick Beverley", 1, 7, 5, true);
+  Player p4 = new Player("Terrence Jones", 4, 7, 7, false);
+  Player p3 = new Player("Trevor Ariza", 3, 6, 8, true);
+
+  // Cleverland Cavaliers
+  ArrayList<Player> cava = new ArrayList<Player>();
+  Team cleverland = new Team("Cleverland Cavaliers", 1);
+  Player p8 = new Player("LeBron James", 3, 10, 7, true);
+  Player p9= new Player("Kevin Love", 4, 8, 7, true);
+  Player p10 = new Player("Anderson Varejao", 5, 4, 9, false);
+  Player p6 = new Player("Kyrie Irving", 1, 8, 7, false);
+  Player p7 = new Player("Dion Waiters", 2, 6, 6, true);
+
+  // Boston Celtics
+  ArrayList<Player> celt = new ArrayList<Player>();
+  Team boston = new Team("Boston Celtics", 1);
+  Player bos1 = new Player("Rajon Rondo", 1, 7, 9, true);
+  Player bos2 = new Player("Avery Bradley", 2, 6, 6, true);
+  Player bos3 = new Player("Jeff Green", 3, 8, 7, true);
+  Player bos4 = new Player("Jared Sullinger", 4, 6, 8, false);
+  Player bos5 = new Player("Kelly Olynyk", 5, 6, 7, false);
+
+  // Los Angeles Lakers
+  ArrayList<Player> lakers = new ArrayList<Player>();
+  Team LA = new Team("Los Angeles Lakers", 2);
+  Player la1 = new Player("Jeremy Lin", 1, 7, 6, true);
+  Player la2 = new Player("Kobe Bryant", 2, 9, 5, true);
+  Player la3 = new Player("Nick Young", 3, 8, 4, true);
+  Player la4 = new Player("Carlos Boozer", 4, 7, 6, false);
+  Player la5 = new Player("Jordan Hill", 5, 6, 7, false);
+
+
+
+
+//******************************* Initialize your Match below. 2 Examples given.******************************************
+//*******************************   Pick 2 teams two complete your match.         ****************************************
+  //Match Houston vs Cleverland
+  Match match = new Match(cleverland, houston);
+
+  //Match Boston vs LA
+  Match match2 = new Match(boston, LA);
+
+  //ArrayList to store the result of Match.
+  ArrayList<Integer> rlist = new ArrayList<Integer>();
+
+
+void setup() {
+  size(1000, 800);
+  f = createFont("Arial",16,true); // STEP 3 Create Font
+  background(255);
+  print(initial);
+
+
+
+  //******************************* Initialize your team below. 4 Examples given.******************************************
+
+  // Houston Rocket
+  houston.addPlayers(p1);
+  houston.addPlayers(p2);
+  houston.addPlayers(p3);
+  houston.addPlayers(p4);
+  houston.addPlayers(p5);
+
+  // Cleverland Cavaliers
+  cleverland.addPlayers(p6);
+  cleverland.addPlayers(p7);
+  cleverland.addPlayers(p8);
+  cleverland.addPlayers(p9);
+  cleverland.addPlayers(p10);
+
+  // Boston Celtics
+  boston.addPlayers(bos1);
+  boston.addPlayers(bos2);
+  boston.addPlayers(bos3);
+  boston.addPlayers(bos4);
+  boston.addPlayers(bos5);
+
+  // LA lakers
+  LA.addPlayers(la1);
+  LA.addPlayers(la2);
+  LA.addPlayers(la3);
+  LA.addPlayers(la4);
+  LA.addPlayers(la5);
+
+
+
+}
+
+// Function to start the match
+void startMatch(Match match) {
+   match.begin();
+   //match.matchResult();
+   match.end();
+
+}
+
+
+
+
+void draw() {
+ //fill(value);
+  //textFont(f, 25);
+  // background(255);
+  //startMatch();
+
+  //text(map(6, 2, 9, 0.1, 0.5), 100, 100);
+
+}
+int startline = 20;
+void keyPressed() {
+
+  if (key =='s') {
+    initial = "";
+    background(255);
+    fill(0);
+    startMatch(match2);
+    textFont(f, 20);
+    //text(match.slist.get(match.slist.size()-1), 20, startline);
+    print(match2.slist.get(match2.slist.size()-1));
+
+  }
+  if (key == 'r') {
+    background(255);
+    fill(0);
+    match2.statement();
+    //startline += 30;
+    textFont(f, 18);
+    //text(match.slist.get(match.slist.size()-1), 20, startline);
+    print(match2.slist.get(match2.slist.size()-1));
+    text(match2.printDetail(), 10, 100);
+
+    //printResult(match); //******************************* Put your match here! ******************************************
+  }
+
+}
